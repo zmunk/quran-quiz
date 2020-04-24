@@ -41,7 +41,6 @@ class Window(QMainWindow):
             self.populate_combobox_1()
 
         elif state == "configure 2":
-            print(f"configuring second combobox: {n}")
             self.populate_combobox_2(n)
 
         # elif state == "start":
