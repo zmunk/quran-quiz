@@ -6,8 +6,7 @@ def get_ayahs(surah_num, start_ayah, num_of_ayahs):
     ''' returns dict of specified ayahs with keys as ayah number '''
     res = {}
 
-    url = f'''http://api.alquran.cloud/v1/surah/{surah_num}?
-    offset={start_ayah}&limit={num_of_ayahs}'''
+    url = f'''http://api.alquran.cloud/v1/surah/{surah_num}?offset={start_ayah-1}&limit={num_of_ayahs}'''
 
     response = requests.get(url)
     if response.status_code != 200:

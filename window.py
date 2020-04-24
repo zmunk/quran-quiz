@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 import random
 from PyQt5.QtCore import Qt, QDir
 from PyQt5.QtGui import QIcon, QFont, QFontDatabase
@@ -19,12 +20,11 @@ class Window(QMainWindow):
 
         self.ctrl = ctrl
         self.ctrl.signal.connect(self.relay)
+        self.ctrl.setup_signal.connect(self.init_values)
 
         self.setWindowProperties() # size, title, icon
 
-        # self.state = "start"
         self.configure_screen(self.ctrl.surah_list)
-        # self.start_screen()
 
     def setWindowProperties(self):
         ''' set dimensions, title, logo '''
@@ -41,32 +41,40 @@ class Window(QMainWindow):
             self.populate_combobox_1()
 
         elif state == "configure 2":
+            print(f"configuring second combobox: {n}")
             self.populate_combobox_2(n)
 
-        elif state == "start":
-            self.question_screen(n)
+        # elif state == "start":
+        #     self.question_screen(n)
         elif state == "question":
             self.question_screen(n, text)
         elif state == "result":
             res = True if n == 1 else 0
             self.result_screen(res)
 
+    def init_values(self, start_ayah, num_of_ayahs):
+        self.start_ayah = start_ayah
+        self.num_of_ayahs = num_of_ayahs
+        self.create_buttons(num_of_ayahs, start_ayah)
+
     def populate_combobox_1(self):
+        self.from_ayah_combobox.clear()
         for i in range(1, self.ayahs_in_surah + 1):
             self.from_ayah_combobox.addItem(str(i))
 
     def populate_combobox_2(self, start):
+        self.to_ayah_combobox.clear()
         for i in range(start, self.ayahs_in_surah + 1):
             self.to_ayah_combobox.addItem(str(i))
 
     def configure_screen(self, surah_list):
         ''' select surah and ayahs '''
 
-        combobox = QComboBox()
-        combobox.addItem("")
+        self.surah_combobox = QComboBox()
+        self.surah_combobox.addItem("")
         for ind, surah in enumerate(surah_list[1:]):
-            combobox.addItem(f"{ind+1} - {surah}")
-        combobox.activated.connect(self.ctrl.surah_combobox_item_selected)
+            self.surah_combobox.addItem(f"{ind+1} - {surah}")
+        self.surah_combobox.activated.connect(self.ctrl.surah_combobox_item_selected)
 
         self.from_ayah_combobox = QComboBox()
         self.from_ayah_combobox.activated.connect(self.ctrl.start_ayah_selected)
@@ -78,7 +86,7 @@ class Window(QMainWindow):
         start_btn.pressed.connect(self.ctrl.start_btn_pressed)
 
         self.components = [
-            [QLabel("Select surah:"), combobox],
+            [QLabel("Select surah:"), self.surah_combobox],
             [
                 QLabel("Select ayah range:"),
                 self.from_ayah_combobox,
@@ -102,14 +110,22 @@ class Window(QMainWindow):
             ]
         self.setup_layout()
      
-    def question_screen(self, n, txt):
-        ''' question screen '''
+    def question_screen(self, answer, txt):
+        ''' question screen 
+        n: answer
+        '''
+        # self.answer = answer
+
         text = QLabel(txt)
         text.setFont(self.arabic_font)
 
+        # self.create_buttons()
+        self.create_buttons(self.num_of_ayahs, self.start_ayah)
+
         self.components = [
             text, 
-            self.create_buttons(n),
+            # self.create_buttons(n, start),
+            self.button_grid_group_box,
             ]
         self.setup_layout()
 
@@ -129,18 +145,19 @@ class Window(QMainWindow):
             ]
         self.setup_layout()
 
-    def create_buttons(self, n):
+    def create_buttons(self, num_btns, start):
         num_of_cols = 6
-        group_box = QGroupBox()
-        layout = QGridLayout()
-        for i in range(n):
+        self.button_grid_group_box = QGroupBox()
+        self.button_grid_layout = QGridLayout()
+        for i in range(num_btns):
             row = i / num_of_cols
             col = i % num_of_cols
-            btn = QPushButton(str(i+1))
-            btn.pressed.connect(lambda i=i: self.ctrl.num_btn_pressed(i+1))
-            layout.addWidget(btn, row, col)
-        group_box.setLayout(layout)
-        return group_box
+            btn = QPushButton(str(i+start))
+            btn.pressed.connect(lambda i=i: self.ctrl.num_btn_pressed(i+start))
+            self.button_grid_layout.addWidget(btn, row, col)
+        self.button_grid_group_box.setLayout(self.button_grid_layout)
+        # return group_box
+        # self.button_grid_group_box = group_box
 
     def setup_layout(self):
         ''' add components to screen '''
